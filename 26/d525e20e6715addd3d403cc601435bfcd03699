@@ -1,0 +1,22 @@
+src/app.js
+  s_427f6a469bece9::t_1e062d4aaf7ded 49
+test/api.test.js
+  s_427f6a469bece9::t_bd20536ce1a360 72-75
+  s_427f6a469bece9::t_e1f5ecebf9feea 63-71,76-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "26d525e20e6715addd3d403cc601435bfcd03699",
+  "prompts": {},
+  "sessions": {
+    "s_427f6a469bece9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "366b9298-bda0-4e71-b835-a73484731f9b",
+        "model": "unknown"
+      },
+      "human_author": "Jonathan Jayet <github@jayet.io>"
+    }
+  }
+}
