@@ -4,9 +4,19 @@ Une mini API Node.js volontairement imparfaite, conçue pour tester un agent de 
 
 Le projet utilise uniquement les modules natifs de Node.js : aucun `npm install` n'est nécessaire.
 
-## Démarrage
+## Versions Node.js supportées
 
-Prérequis : Node.js 20 ou plus récent.
+- Minimum : Node.js 22, encore maintenu en LTS.
+- Recommandé en local et en production : Node.js 24 LTS.
+- La CI teste également Node.js 26 Current pour détecter les incompatibilités à venir.
+
+Avec NVM, le fichier `.nvmrc` sélectionne automatiquement Node.js 24 :
+
+```bash
+nvm use
+```
+
+## Démarrage
 
 ```bash
 npm start
@@ -42,6 +52,8 @@ npm test
 ```
 
 Les tests marqués `TODO` correspondent à des bugs connus qui doivent être traités via les issues du dépôt.
+
+La CI utilise les versions courantes de `actions/checkout` et `actions/setup-node`, épinglées par SHA, et couvre Node.js 22, 24 et 26. Dependabot vérifie chaque semaine les mises à jour des actions GitHub.
 
 ## Travailler avec un agent
 

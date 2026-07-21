@@ -6,10 +6,12 @@ This repository is a deliberately small Node.js playground for coding-agent exer
 
 ## Quick start
 
-- Requirements: Node.js 20 or newer. There are no runtime dependencies.
+- Requirements: Node.js 22 or newer; Node.js 24 LTS is the recommended local version. There are no runtime dependencies.
+- Select the recommended version with `nvm use` when NVM is available.
 - Run the API: `npm start`
 - Run in watch mode: `npm run dev`
 - Run all checks: `npm run check && npm test`
+- CI covers Node.js 22 LTS, 24 LTS, and the Node.js 26 Current release line.
 
 ## Architecture
 
