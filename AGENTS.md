@@ -19,6 +19,8 @@ This repository is a deliberately small Node.js playground for coding-agent exer
 - `src/app.js` owns routing and HTTP input/output.
 - `src/store.js` owns the in-memory todo collection.
 - `test/api.test.js` contains black-box API tests using Node's built-in test runner and `fetch`.
+- `agent.config.json` defines the agent branch, guardrails, and quality commands.
+- `.github/workflows/review-fix.yml` handles authorized `/agent fix` commands on agent pull requests.
 
 ## Working rules
 

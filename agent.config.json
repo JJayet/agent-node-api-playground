@@ -1,0 +1,15 @@
+{
+  "baseBranch": "main",
+  "branchPrefix": "agent/",
+  "qualityCommands": [
+    { "command": "npm", "args": ["run", "check"] },
+    { "command": "npm", "args": ["test"] }
+  ],
+  "requiredIssueFields": [
+    "summary",
+    "description",
+    "acceptanceCriteria"
+  ],
+  "maxChangedFiles": 10,
+  "approvalLabel": "ready-for-agent"
+}

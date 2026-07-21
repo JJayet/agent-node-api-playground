@@ -64,6 +64,27 @@ Le fichier [`AGENTS.md`](./AGENTS.md) donne à l'agent les commandes, l'architec
 3. laisse-le ajouter le test de régression et ouvrir une pull request ;
 4. vérifie la CI avant de fusionner.
 
+### Configuration de l'agent
+
+Le fichier [`agent.config.json`](./agent.config.json) limite l'agent aux branches `agent/`, à dix fichiers modifiés et aux commandes `npm run check` puis `npm test`.
+
+Le workflow [`.github/workflows/review-fix.yml`](./.github/workflows/review-fix.yml) permet à un maintainer de demander une correction sur une pull request créée par l'agent :
+
+- `/agent fix` dans un fil de review inline ;
+- `/agent fix <instruction>` pour préciser le correctif ;
+- `/agent fix-all` dans la conversation générale de la pull request.
+
+Avant de l'utiliser, configurer dans GitHub Actions :
+
+| Type | Nom | Usage |
+| --- | --- | --- |
+| Variable | `AGENT_REPOSITORY` | Dépôt contenant le control plane agent, au format `organisation/depot` |
+| Variable | `AGENT_REF` | Tag protégé ou SHA immuable du code agent |
+| Secret | `CODEX_API_KEY` | Authentification du moteur Codex |
+| Secret | `AGENT_REPOSITORY_TOKEN` | Lecture du dépôt agent s'il est privé |
+
+Le workflow refuse de démarrer si la source de confiance ou sa référence ne sont pas définies. Les commandes qualité tournent dans un conteneur Node.js 24 sans réseau et avec le dépôt monté en lecture seule.
+
 ## Licence
 
 MIT
