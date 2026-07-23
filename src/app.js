@@ -8,6 +8,20 @@ function sendJson(response, statusCode, body) {
   response.end(JSON.stringify(body));
 }
 
+function parsePositiveIntParam(searchParams, name, defaultValue) {
+  if (!searchParams.has(name)) {
+    return defaultValue;
+  }
+
+  const raw = searchParams.get(name);
+
+  if (!/^\d+$/.test(raw) || Number(raw) < 1) {
+    return null;
+  }
+
+  return Number(raw);
+}
+
 async function readJson(request) {
   const chunks = [];
 
@@ -39,7 +53,22 @@ export function createApp(store) {
         todos = todos.filter((todo) => todo.completed === completed);
       }
 
-      return sendJson(response, 200, { data: todos });
+      const page = parsePositiveIntParam(url.searchParams, 'page', 1);
+      const limit = parsePositiveIntParam(url.searchParams, 'limit', 10);
+
+      if (page === null || limit === null) {
+        return sendJson(response, 400, { error: 'page and limit must be positive integers' });
+      }
+
+      const total = todos.length;
+      const totalPages = Math.ceil(total / limit);
+      const start = (page - 1) * limit;
+      const pageItems = todos.slice(start, start + limit);
+
+      return sendJson(response, 200, {
+        data: pageItems,
+        meta: { page, limit, total, totalPages }
+      });
     }
 
     if (request.method === 'POST' && url.pathname === '/todos') {
