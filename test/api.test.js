@@ -64,3 +64,48 @@ describe('todos', () => {
   test.todo('rejects whitespace-only todo titles');
   test.todo('keeps todo IDs unique after a deletion');
 });
+
+describe('PATCH /todos/:id', () => {
+  test('updates the completed status', async () => {
+    const response = await fetch(`${baseUrl}/todos/2`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ completed: true })
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.data.id, 2);
+    assert.equal(body.data.completed, true);
+  });
+
+  test('rejects a non-boolean completed value', async () => {
+    const response = await fetch(`${baseUrl}/todos/2`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ completed: 'yes' })
+    });
+
+    assert.equal(response.status, 400);
+  });
+
+  test('rejects malformed JSON', async () => {
+    const response = await fetch(`${baseUrl}/todos/2`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: '{'
+    });
+
+    assert.equal(response.status, 400);
+  });
+
+  test('returns 404 for a missing todo', async () => {
+    const response = await fetch(`${baseUrl}/todos/999`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ completed: true })
+    });
+
+    assert.equal(response.status, 404);
+  });
+});

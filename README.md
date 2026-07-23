@@ -32,6 +32,7 @@ L'API écoute par défaut sur `http://localhost:3000`. La variable d'environneme
 | `GET` | `/todos` | Liste les tâches |
 | `GET` | `/todos?completed=true` | Filtre les tâches par statut |
 | `POST` | `/todos` | Crée une tâche avec `{ "title": "..." }` |
+| `PATCH` | `/todos/:id` | Met à jour le statut avec `{ "completed": true }` |
 | `DELETE` | `/todos/:id` | Supprime une tâche |
 
 Exemple :
@@ -42,6 +43,10 @@ curl http://localhost:3000/todos
 curl -X POST http://localhost:3000/todos \
   -H 'content-type: application/json' \
   -d '{"title":"Tester un agent"}'
+
+curl -X PATCH http://localhost:3000/todos/2 \
+  -H 'content-type: application/json' \
+  -d '{"completed":true}'
 ```
 
 ## Vérifications
