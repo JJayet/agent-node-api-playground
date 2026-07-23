@@ -45,13 +45,13 @@ export function createApp(store) {
     if (request.method === 'POST' && url.pathname === '/todos') {
       try {
         const body = await readJson(request);
+        const title = typeof body.title === 'string' ? body.title.trim() : '';
 
-        // Known bug: a whitespace-only title passes this validation.
-        if (typeof body.title !== 'string' || !body.title) {
+        if (!title) {
           return sendJson(response, 400, { error: 'title is required' });
         }
 
-        return sendJson(response, 201, { data: store.create(body.title) });
+        return sendJson(response, 201, { data: store.create(title) });
       } catch {
         return sendJson(response, 400, { error: 'invalid JSON body' });
       }
