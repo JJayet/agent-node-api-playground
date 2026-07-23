@@ -8,14 +8,14 @@ function sendJson(response, statusCode, body) {
   response.end(JSON.stringify(body));
 }
 
-function parsePositiveIntParam(searchParams, name, defaultValue) {
+function parsePositiveIntParam(searchParams, name, defaultValue, maxValue = Infinity) {
   if (!searchParams.has(name)) {
     return defaultValue;
   }
 
   const raw = searchParams.get(name);
 
-  if (!/^\d+$/.test(raw) || Number(raw) < 1) {
+  if (!/^\d+$/.test(raw) || Number(raw) < 1 || Number(raw) > maxValue) {
     return null;
   }
 
@@ -54,10 +54,10 @@ export function createApp(store) {
       }
 
       const page = parsePositiveIntParam(url.searchParams, 'page', 1);
-      const limit = parsePositiveIntParam(url.searchParams, 'limit', 10);
+      const limit = parsePositiveIntParam(url.searchParams, 'limit', 10, 100);
 
       if (page === null || limit === null) {
-        return sendJson(response, 400, { error: 'page and limit must be positive integers' });
+        return sendJson(response, 400, { error: 'page and limit must be positive integers no greater than 100' });
       }
 
       const total = todos.length;

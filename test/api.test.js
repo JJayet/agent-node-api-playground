@@ -86,6 +86,13 @@ describe('todos', () => {
     assert.match((await response.json()).error, /positive integer/);
   });
 
+  test('rejects a limit above the maximum', async () => {
+    const response = await fetch(`${baseUrl}/todos?limit=101`);
+
+    assert.equal(response.status, 400);
+    assert.match((await response.json()).error, /positive integer/);
+  });
+
   test('creates a todo', async () => {
     const response = await fetch(`${baseUrl}/todos`, {
       method: 'POST',
