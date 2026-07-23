@@ -34,8 +34,13 @@ export function createApp(store) {
       let todos = store.list();
 
       if (url.searchParams.has('completed')) {
-        // Known bug: Boolean('false') is true.
-        const completed = Boolean(url.searchParams.get('completed'));
+        const raw = url.searchParams.get('completed');
+
+        if (raw !== 'true' && raw !== 'false') {
+          return sendJson(response, 400, { error: 'completed must be "true" or "false"' });
+        }
+
+        const completed = raw === 'true';
         todos = todos.filter((todo) => todo.completed === completed);
       }
 
