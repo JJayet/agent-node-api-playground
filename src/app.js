@@ -59,6 +59,16 @@ export function createApp(store) {
 
     const todoMatch = url.pathname.match(/^\/todos\/(\d+)$/);
 
+    if (request.method === 'GET' && todoMatch) {
+      const todo = store.get(Number(todoMatch[1]));
+
+      if (!todo) {
+        return sendJson(response, 404, { error: 'todo not found' });
+      }
+
+      return sendJson(response, 200, { data: todo });
+    }
+
     if (request.method === 'DELETE' && todoMatch) {
       const removed = store.remove(Number(todoMatch[1]));
 

@@ -50,6 +50,31 @@ describe('todos', () => {
     assert.equal(body.data.completed, false);
   });
 
+  test('gets a todo by id', async () => {
+    const response = await fetch(`${baseUrl}/todos/2`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.data.id, 2);
+    assert.equal(body.data.title, 'Pick a GitHub issue');
+  });
+
+  test('returns 404 for an unknown todo id', async () => {
+    const response = await fetch(`${baseUrl}/todos/999`);
+    const body = await response.json();
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(body, { error: 'todo not found' });
+  });
+
+  test('returns the generic 404 for a non-matching route', async () => {
+    const response = await fetch(`${baseUrl}/todos/not-an-id`);
+    const body = await response.json();
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(body, { error: 'route not found' });
+  });
+
   test('rejects malformed JSON', async () => {
     const response = await fetch(`${baseUrl}/todos`, {
       method: 'POST',

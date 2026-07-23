@@ -12,6 +12,11 @@ export function createTodoStore(seed = initialTodos) {
       return structuredClone(todos);
     },
 
+    get(id) {
+      const todo = todos.find((todo) => todo.id === id);
+      return todo ? structuredClone(todo) : undefined;
+    },
+
     create(title) {
       // Intentionally naive: deleting a todo can make this ID collide.
       const todo = {

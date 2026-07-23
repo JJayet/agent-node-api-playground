@@ -31,6 +31,7 @@ L'API écoute par défaut sur `http://localhost:3000`. La variable d'environneme
 | `GET` | `/health` | Vérifie que le service répond |
 | `GET` | `/todos` | Liste les tâches |
 | `GET` | `/todos?completed=true` | Filtre les tâches par statut |
+| `GET` | `/todos/:id` | Récupère une tâche par son identifiant |
 | `POST` | `/todos` | Crée une tâche avec `{ "title": "..." }` |
 | `DELETE` | `/todos/:id` | Supprime une tâche |
 
