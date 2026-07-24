@@ -70,6 +70,26 @@ export function createApp(store) {
       return response.end();
     }
 
+    if (request.method === 'PATCH' && todoMatch) {
+      try {
+        const body = await readJson(request);
+
+        if (typeof body.completed !== 'boolean') {
+          return sendJson(response, 400, { error: 'completed must be a boolean' });
+        }
+
+        const updated = store.update(Number(todoMatch[1]), body.completed);
+
+        if (!updated) {
+          return sendJson(response, 404, { error: 'todo not found' });
+        }
+
+        return sendJson(response, 200, { data: updated });
+      } catch {
+        return sendJson(response, 400, { error: 'invalid JSON body' });
+      }
+    }
+
     return sendJson(response, 404, { error: 'route not found' });
   });
 }
