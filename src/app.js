@@ -46,8 +46,7 @@ export function createApp(store) {
       try {
         const body = await readJson(request);
 
-        // Known bug: a whitespace-only title passes this validation.
-        if (typeof body.title !== 'string' || !body.title) {
+        if (typeof body.title !== 'string' || !body.title.trim()) {
           return sendJson(response, 400, { error: 'title is required' });
         }
 
