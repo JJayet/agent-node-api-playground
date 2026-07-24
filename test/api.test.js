@@ -60,6 +60,30 @@ describe('todos', () => {
     assert.equal(response.status, 400);
   });
 
+  test('gets a todo by id', async () => {
+    const response = await fetch(`${baseUrl}/todos/2`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.data.id, 2);
+  });
+
+  test('404s for an unknown todo id', async () => {
+    const response = await fetch(`${baseUrl}/todos/999`);
+    const body = await response.json();
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(body, { error: 'todo not found' });
+  });
+
+  test('keeps the generic 404 for a non-matching route', async () => {
+    const response = await fetch(`${baseUrl}/todos/abc`);
+    const body = await response.json();
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(body, { error: 'route not found' });
+  });
+
   test.todo('filters incomplete todos with ?completed=false');
   test.todo('rejects whitespace-only todo titles');
   test.todo('keeps todo IDs unique after a deletion');
