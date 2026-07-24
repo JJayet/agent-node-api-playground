@@ -108,4 +108,15 @@ describe('PATCH /todos/:id', () => {
 
     assert.equal(response.status, 404);
   });
+
+  test('rejects an oversized request body', async () => {
+    const oversizedTitle = 'a'.repeat(2 * 1024 * 1024);
+    const response = await fetch(`${baseUrl}/todos/2`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ completed: true, padding: oversizedTitle })
+    });
+
+    assert.equal(response.status, 413);
+  });
 });
