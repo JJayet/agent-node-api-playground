@@ -60,7 +60,32 @@ describe('todos', () => {
     assert.equal(response.status, 400);
   });
 
-  test.todo('filters incomplete todos with ?completed=false');
+  test('filters completed todos with ?completed=true', async () => {
+    const response = await fetch(`${baseUrl}/todos?completed=true`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(body.data.every((todo) => todo.completed === true));
+    assert.ok(body.data.length > 0);
+  });
+
+  test('filters incomplete todos with ?completed=false', async () => {
+    const response = await fetch(`${baseUrl}/todos?completed=false`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.ok(body.data.every((todo) => todo.completed === false));
+    assert.ok(body.data.length > 0);
+  });
+
+  test('rejects an invalid completed value', async () => {
+    const response = await fetch(`${baseUrl}/todos?completed=maybe`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.ok(body.error);
+  });
+
   test.todo('rejects whitespace-only todo titles');
   test.todo('keeps todo IDs unique after a deletion');
 });
