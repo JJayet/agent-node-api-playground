@@ -37,6 +37,48 @@ describe('todos', () => {
     assert.equal(body.data.length, 3);
   });
 
+  test('applies default pagination metadata', async () => {
+    const response = await fetch(`${baseUrl}/todos`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.meta, { page: 1, limit: 10, total: 3, totalPages: 1 });
+  });
+
+  test('paginates with page and limit', async () => {
+    const response = await fetch(`${baseUrl}/todos?page=2&limit=2`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.data.length, 1);
+    assert.deepEqual(body.meta, { page: 2, limit: 2, total: 3, totalPages: 2 });
+  });
+
+  test('applies the completed filter before pagination', async () => {
+    const response = await fetch(`${baseUrl}/todos?completed=true&page=1&limit=1`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.meta.total, 1);
+    assert.equal(body.data.length, 1);
+  });
+
+  test('rejects a non-positive-integer page', async () => {
+    const response = await fetch(`${baseUrl}/todos?page=0`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.ok(body.error);
+  });
+
+  test('rejects a non-integer limit', async () => {
+    const response = await fetch(`${baseUrl}/todos?limit=abc`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.ok(body.error);
+  });
+
   test('creates a todo', async () => {
     const response = await fetch(`${baseUrl}/todos`, {
       method: 'POST',

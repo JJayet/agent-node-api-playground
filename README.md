@@ -29,19 +29,38 @@ L'API écoute par défaut sur `http://localhost:3000`. La variable d'environneme
 | Méthode | Route | Description |
 | --- | --- | --- |
 | `GET` | `/health` | Vérifie que le service répond |
-| `GET` | `/todos` | Liste les tâches |
-| `GET` | `/todos?completed=true` | Filtre les tâches par statut |
+| `GET` | `/todos` | Liste les tâches, paginées |
+| `GET` | `/todos?completed=true` | Filtre les tâches par statut (appliqué avant la pagination) |
+| `GET` | `/todos?page=1&limit=10` | Pagine les tâches (`page` et `limit` par défaut : `1` et `10`) |
 | `POST` | `/todos` | Crée une tâche avec `{ "title": "..." }` |
 | `DELETE` | `/todos/:id` | Supprime une tâche |
+
+`page` et `limit` doivent être des entiers strictement positifs ; toute valeur invalide répond `400` avec une erreur JSON.
 
 Exemple :
 
 ```bash
 curl http://localhost:3000/todos
 
+curl "http://localhost:3000/todos?page=1&limit=2"
+
 curl -X POST http://localhost:3000/todos \
   -H 'content-type: application/json' \
   -d '{"title":"Tester un agent"}'
+```
+
+Réponse de `GET /todos?page=1&limit=2` :
+
+```json
+{
+  "data": [],
+  "meta": {
+    "page": 1,
+    "limit": 2,
+    "total": 3,
+    "totalPages": 2
+  }
+}
 ```
 
 ## Vérifications
