@@ -62,5 +62,21 @@ describe('todos', () => {
 
   test.todo('filters incomplete todos with ?completed=false');
   test.todo('rejects whitespace-only todo titles');
-  test.todo('keeps todo IDs unique after a deletion');
+
+  test('keeps todo IDs unique after a deletion', async () => {
+    await fetch(`${baseUrl}/todos/2`, { method: 'DELETE' });
+
+    const response = await fetch(`${baseUrl}/todos`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: 'Another todo after deletion' })
+    });
+
+    const listResponse = await fetch(`${baseUrl}/todos`);
+    const { data } = await listResponse.json();
+    const ids = data.map((todo) => todo.id);
+
+    assert.equal(response.status, 201);
+    assert.equal(new Set(ids).size, ids.length);
+  });
 });
