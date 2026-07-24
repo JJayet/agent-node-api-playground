@@ -6,6 +6,7 @@ const initialTodos = [
 
 export function createTodoStore(seed = initialTodos) {
   let todos = structuredClone(seed);
+  let nextId = todos.reduce((max, todo) => Math.max(max, todo.id), 0) + 1;
 
   return {
     list() {
@@ -13,9 +14,8 @@ export function createTodoStore(seed = initialTodos) {
     },
 
     create(title) {
-      // Intentionally naive: deleting a todo can make this ID collide.
       const todo = {
-        id: todos.length + 1,
+        id: nextId++,
         title: title.trim(),
         completed: false
       };
