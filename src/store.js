@@ -28,6 +28,17 @@ export function createTodoStore(seed = initialTodos) {
       const previousLength = todos.length;
       todos = todos.filter((todo) => todo.id !== id);
       return todos.length < previousLength;
+    },
+
+    update(id, completed) {
+      const todo = todos.find((todo) => todo.id === id);
+
+      if (!todo) {
+        return null;
+      }
+
+      todo.completed = completed;
+      return structuredClone(todo);
     }
   };
 }

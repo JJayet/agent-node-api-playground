@@ -2,16 +2,26 @@ import { createServer } from 'node:http';
 import { URL } from 'node:url';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
+const MAX_BODY_BYTES = 1024 * 1024; // ponytail: fixed cap, raise/config if a real use case needs bigger payloads
 
 function sendJson(response, statusCode, body) {
   response.writeHead(statusCode, JSON_HEADERS);
   response.end(JSON.stringify(body));
 }
 
+class PayloadTooLargeError extends Error {}
+
 async function readJson(request) {
   const chunks = [];
+  let totalBytes = 0;
 
   for await (const chunk of request) {
+    totalBytes += chunk.length;
+
+    if (totalBytes > MAX_BODY_BYTES) {
+      throw new PayloadTooLargeError();
+    }
+
     chunks.push(chunk);
   }
 
@@ -52,7 +62,11 @@ export function createApp(store) {
         }
 
         return sendJson(response, 201, { data: store.create(body.title) });
-      } catch {
+      } catch (error) {
+        if (error instanceof PayloadTooLargeError) {
+          return sendJson(response, 413, { error: 'request body too large' });
+        }
+
         return sendJson(response, 400, { error: 'invalid JSON body' });
       }
     }
@@ -68,6 +82,30 @@ export function createApp(store) {
 
       response.writeHead(204);
       return response.end();
+    }
+
+    if (request.method === 'PATCH' && todoMatch) {
+      try {
+        const body = await readJson(request);
+
+        if (typeof body.completed !== 'boolean') {
+          return sendJson(response, 400, { error: 'completed must be a boolean' });
+        }
+
+        const updated = store.update(Number(todoMatch[1]), body.completed);
+
+        if (!updated) {
+          return sendJson(response, 404, { error: 'todo not found' });
+        }
+
+        return sendJson(response, 200, { data: updated });
+      } catch (error) {
+        if (error instanceof PayloadTooLargeError) {
+          return sendJson(response, 413, { error: 'request body too large' });
+        }
+
+        return sendJson(response, 400, { error: 'invalid JSON body' });
+      }
     }
 
     return sendJson(response, 404, { error: 'route not found' });
