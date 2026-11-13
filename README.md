@@ -31,13 +31,24 @@ L'API écoute par défaut sur `http://localhost:3000`. La variable d'environneme
 | `GET` | `/health` | Vérifie que le service répond |
 | `GET` | `/todos` | Liste les tâches |
 | `GET` | `/todos?completed=true` | Filtre les tâches par statut |
+| `GET` | `/todos?page=1&limit=2` | Pagine les tâches (`page=1` et `limit=10` par défaut) |
 | `POST` | `/todos` | Crée une tâche avec `{ "title": "..." }` |
 | `DELETE` | `/todos/:id` | Supprime une tâche |
+
+`page` et `limit` doivent être des entiers strictement positifs, sinon l'API répond `400` avec `{ "error": "..." }`. Le filtre `completed` est appliqué avant la pagination. La réponse contient les métadonnées :
+
+```json
+{
+  "data": [],
+  "meta": { "page": 1, "limit": 2, "total": 3, "totalPages": 2 }
+}
+```
 
 Exemple :
 
 ```bash
 curl http://localhost:3000/todos
+curl 'http://localhost:3000/todos?page=1&limit=2'
 
 curl -X POST http://localhost:3000/todos \
   -H 'content-type: application/json' \
