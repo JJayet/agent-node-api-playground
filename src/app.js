@@ -22,6 +22,15 @@ async function readJson(request) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
+function parsePositiveInt(value, defaultValue) {
+  if (value === null) {
+    return defaultValue;
+  }
+
+  const number = /^[1-9]\d*$/.test(value) ? Number(value) : null;
+  return Number.isSafeInteger(number) ? number : null;
+}
+
 export function createApp(store) {
   return createServer(async (request, response) => {
     const url = new URL(request.url, 'http://localhost');
@@ -39,7 +48,20 @@ export function createApp(store) {
         todos = todos.filter((todo) => todo.completed === completed);
       }
 
-      return sendJson(response, 200, { data: todos });
+      const page = parsePositiveInt(url.searchParams.get('page'), 1);
+      const limit = parsePositiveInt(url.searchParams.get('limit'), 10);
+
+      if (page === null || limit === null) {
+        return sendJson(response, 400, { error: 'page and limit must be positive integers' });
+      }
+
+      const total = todos.length;
+      const start = (page - 1) * limit;
+
+      return sendJson(response, 200, {
+        data: todos.slice(start, start + limit),
+        meta: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      });
     }
 
     if (request.method === 'POST' && url.pathname === '/todos') {
