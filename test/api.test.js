@@ -61,6 +61,30 @@ describe('todos', () => {
   });
 
   test.todo('filters incomplete todos with ?completed=false');
-  test.todo('rejects whitespace-only todo titles');
+  test('rejects whitespace-only todo titles', async () => {
+    const before = await (await fetch(`${baseUrl}/todos`)).json();
+    const response = await fetch(`${baseUrl}/todos`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: '   ' })
+    });
+    const after = await (await fetch(`${baseUrl}/todos`)).json();
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: 'title is required' });
+    assert.equal(after.data.length, before.data.length);
+  });
+
+  test('trims valid todo titles', async () => {
+    const response = await fetch(`${baseUrl}/todos`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title: '  Trim me  ' })
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal((await response.json()).data.title, 'Trim me');
+  });
+
   test.todo('keeps todo IDs unique after a deletion');
 });
