@@ -1,0 +1,96 @@
+name: Agent ticket runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      control_plane_url:
+        description: URL du control plane
+        required: true
+        type: string
+      run_id:
+        description: Identifiant du run
+        required: true
+        type: string
+      run_token:
+        description: Jeton signé à usage limité
+        required: true
+        type: string
+      revision_id:
+        description: Révision du run à exécuter (commande /agent fix), vide pour le run lui-même
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  # A Run and its Revisions share the group: they change the same pull request, never at once.
+  group: agent-ticket-${{ github.repository }}-${{ inputs.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # The run token is a plain workflow_dispatch input: mask it before any later step's env header prints it.
+      - name: Mask the run token
+        run: echo "::add-mask::${{ inputs.run_token }}"
+
+      - name: Checkout trusted agent source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: ${{ vars.AGENT_REPOSITORY || github.repository }}
+          ref: ${{ vars.AGENT_REF || github.sha }}
+          token: ${{ secrets.AGENT_REPOSITORY_TOKEN || github.token }}
+          path: agent
+          persist-credentials: false
+
+      - name: Checkout target repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: ${{ github.repository }}
+          fetch-depth: 0
+          path: target
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Install trusted agent dependencies
+        working-directory: agent
+        run: bun install --frozen-lockfile
+
+      - name: Pull isolated quality image
+        env:
+          QUALITY_IMAGE: ${{ vars.AGENT_QUALITY_CONTAINER_IMAGE || 'oven/bun:1.3.14' }}
+        run: docker pull "$QUALITY_IMAGE"
+
+      - name: Configure commit identity and ephemeral Git authentication
+        working-directory: target
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          chmod +x "$GITHUB_WORKSPACE/agent/deploy/github-actions/git-askpass.sh"
+
+      - name: Execute signed control-plane run
+        working-directory: agent
+        # No model key here: the agents reach the model only through the control plane's LLM gateway (ADR-0002).
+        env:
+          CONTROL_PLANE_RUN_ID: ${{ inputs.run_id }}
+          CONTROL_PLANE_RUN_TOKEN: ${{ inputs.run_token }}
+          CONTROL_PLANE_REVISION_ID: ${{ inputs.revision_id }}
+          CONTROL_PLANE_URL: ${{ inputs.control_plane_url }}
+          AGENT_QUALITY_CONTAINER_IMAGE: ${{ vars.AGENT_QUALITY_CONTAINER_IMAGE || 'oven/bun:1.3.14' }}
+          GITHUB_GRAPHQL_URL: ${{ github.graphql_url }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GIT_ASKPASS: ${{ github.workspace }}/agent/deploy/github-actions/git-askpass.sh
+          GIT_ASKPASS_REQUIRE: force
+          GIT_TERMINAL_PROMPT: "0"
+          GIT_USERNAME: x-access-token
+          TARGET_REPO_PATH: ${{ github.workspace }}/target
+        run: bun run src/remote-runner.ts
