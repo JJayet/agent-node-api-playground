@@ -28,6 +28,38 @@ describe('GET /health', () => {
   });
 });
 
+describe('GET /openapi.json', () => {
+  test('expose la spécification OpenAPI 3.1', async () => {
+    const response = await fetch(`${baseUrl}/openapi.json`);
+    const spec = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /application\/json/);
+    assert.match(spec.openapi, /^3\.1\.\d+$/);
+    assert.deepEqual(Object.keys(spec.paths).sort(), ['/health', '/todos', '/todos/{id}']);
+    assert.deepEqual(Object.keys(spec.paths['/todos']).sort(), ['get', 'post']);
+    assert.deepEqual(Object.keys(spec.paths['/todos/{id}']), ['delete']);
+    assert.equal(spec.paths['/docs'], undefined);
+    assert.equal(spec.paths['/openapi.json'], undefined);
+
+    const post = spec.paths['/todos'].post;
+    assert.deepEqual(Object.keys(post.responses).sort(), ['201', '400']);
+    const bodySchema = post.requestBody.content['application/json'].schema;
+    assert.deepEqual(bodySchema.required, ['title']);
+    assert.equal(bodySchema.properties.title.minLength, 1);
+
+    const completed = spec.paths['/todos'].get.parameters.find((p) => p.name === 'completed');
+    assert.equal(completed.in, 'query');
+    assert.equal(completed.schema.type, 'boolean');
+    assert.deepEqual(Object.keys(spec.paths['/todos/{id}'].delete.responses).sort(), ['204', '404']);
+  });
+
+  test('GET /health répond toujours ok', async () => {
+    const response = await fetch(`${baseUrl}/health`);
+    assert.equal(await response.text(), '{"status":"ok"}');
+  });
+});
+
 describe('todos', () => {
   test('lists the seeded todos', async () => {
     const response = await fetch(`${baseUrl}/todos`);

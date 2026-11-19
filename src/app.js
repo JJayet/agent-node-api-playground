@@ -1,6 +1,8 @@
 import { createServer } from 'node:http';
 import { URL } from 'node:url';
 
+import { openApiSpec } from './openapi.js';
+
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 
 function sendJson(response, statusCode, body) {
@@ -68,6 +70,10 @@ export function createApp(store) {
 
       response.writeHead(204);
       return response.end();
+    }
+
+    if (request.method === 'GET' && url.pathname === '/openapi.json') {
+      return sendJson(response, 200, openApiSpec);
     }
 
     return sendJson(response, 404, { error: 'route not found' });
