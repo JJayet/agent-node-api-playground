@@ -28,6 +28,39 @@ describe('GET /health', () => {
   });
 });
 
+describe('GET /ping', () => {
+  test('répond pong en JSON', async () => {
+    const response = await fetch(`${baseUrl}/ping`);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8');
+    assert.equal(await response.text(), '{"message":"pong"}');
+  });
+
+  test('ignore la query string', async () => {
+    const response = await fetch(`${baseUrl}/ping?x=1`);
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { message: 'pong' });
+  });
+
+  test('rejette POST et DELETE avec route not found', async () => {
+    for (const method of ['POST', 'DELETE']) {
+      const response = await fetch(`${baseUrl}/ping`, { method });
+
+      assert.equal(response.status, 404, method);
+      assert.deepEqual(await response.json(), { error: 'route not found' });
+    }
+  });
+
+  test('ne route pas /ping/ avec un slash final', async () => {
+    const response = await fetch(`${baseUrl}/ping/`);
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(await response.json(), { error: 'route not found' });
+  });
+});
+
 describe('GET /openapi.json', () => {
   test('expose la spécification OpenAPI 3.1', async () => {
     const response = await fetch(`${baseUrl}/openapi.json`);
