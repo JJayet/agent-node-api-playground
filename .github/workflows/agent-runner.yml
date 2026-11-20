@@ -1,3 +1,4 @@
+# relay-agent-runner: 1
 name: Agent ticket runner
 
 on:
@@ -65,11 +66,6 @@ jobs:
         working-directory: agent
         run: bun install --frozen-lockfile
 
-      - name: Pull isolated quality image
-        env:
-          QUALITY_IMAGE: ${{ vars.AGENT_QUALITY_CONTAINER_IMAGE || 'oven/bun:1.3.14' }}
-        run: docker pull "$QUALITY_IMAGE"
-
       - name: Configure commit identity and ephemeral Git authentication
         working-directory: target
         run: |
@@ -94,3 +90,21 @@ jobs:
           GIT_USERNAME: x-access-token
           TARGET_REPO_PATH: ${{ github.workspace }}/target
         run: bun run src/remote-runner.ts
+
+      # A job that fails or is cancelled before the runner reports (a checkout on a wrong AGENT_REF) would leave the Run
+      # `dispatched` for ever. curl, not bun: Bun may not be installed yet. The report never fails the job, and the
+      # token is masked by the first step.
+      - name: Report a failed or cancelled job to the control plane
+        if: failure() || cancelled()
+        env:
+          CONTROL_PLANE_URL: ${{ inputs.control_plane_url }}
+          RUN_ID: ${{ inputs.run_id }}
+          RUN_TOKEN: ${{ inputs.run_token }}
+          REVISION_ID: ${{ inputs.revision_id }}
+          CI_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -n "$REVISION_ID" ]; then target="revisions/$REVISION_ID"; else target="runs/$RUN_ID"; fi
+          curl -sS --max-time 20 -o /dev/null -X POST \
+            -H "Authorization: Bearer $RUN_TOKEN" -H "Content-Type: application/json" \
+            --data "{\"status\":\"failed\",\"error\":\"CI job failed: $CI_RUN_URL\"}" \
+            "$CONTROL_PLANE_URL/api/runner/$target/callback" || true
