@@ -18,6 +18,7 @@ This repository is a deliberately small Node.js playground for coding-agent exer
 - `src/server.js` reads configuration and starts the HTTP server.
 - `src/app.js` owns routing and HTTP input/output.
 - `src/store.js` owns the in-memory todo collection.
+- `src/mailer.js` exports `createResendMailer({ apiKey, from })`, which sends emails through the Resend API with native `fetch`.
 - `test/api.test.js` contains black-box API tests using Node's built-in test runner and `fetch`.
 - `agent.config.json` defines the agent branch, guardrails, and quality commands.
 - `.github/workflows/review-fix.yml` handles authorized `/agent fix` commands on agent pull requests.
