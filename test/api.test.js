@@ -69,7 +69,12 @@ describe('GET /openapi.json', () => {
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /application\/json/);
     assert.match(spec.openapi, /^3\.1\.\d+$/);
-    assert.deepEqual(Object.keys(spec.paths).sort(), ['/health', '/todos', '/todos/{id}']);
+    assert.deepEqual(Object.keys(spec.paths).sort(), ['/health', '/ping', '/todos', '/todos/{id}']);
+    assert.deepEqual(Object.keys(spec.paths['/ping']), ['get']);
+    assert.deepEqual(spec.paths['/ping'].get.responses[200].content['application/json'].schema.properties.message, {
+      type: 'string',
+      const: 'pong'
+    });
     assert.deepEqual(Object.keys(spec.paths['/todos']).sort(), ['get', 'post']);
     assert.deepEqual(Object.keys(spec.paths['/todos/{id}']), ['delete']);
     assert.equal(spec.paths['/docs'], undefined);
