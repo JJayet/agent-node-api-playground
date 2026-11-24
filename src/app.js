@@ -32,6 +32,10 @@ export function createApp(store) {
       return sendJson(response, 200, { status: 'ok' });
     }
 
+    if (request.method === 'GET' && url.pathname === '/ping') {
+      return sendJson(response, 200, { message: 'pong' });
+    }
+
     if (request.method === 'GET' && url.pathname === '/todos') {
       let todos = store.list();
 

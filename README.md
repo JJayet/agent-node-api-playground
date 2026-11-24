@@ -29,6 +29,7 @@ L'API écoute par défaut sur `http://localhost:3000`. La variable d'environneme
 | Méthode | Route | Description |
 | --- | --- | --- |
 | `GET` | `/health` | Vérifie que le service répond |
+| `GET` | `/ping` | Répond `{"message":"pong"}` |
 | `GET` | `/todos` | Liste les tâches |
 | `GET` | `/todos?completed=true` | Filtre les tâches par statut |
 | `POST` | `/todos` | Crée une tâche avec `{ "title": "..." }` |
