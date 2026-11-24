@@ -33,6 +33,25 @@ export const openApiSpec = {
         }
       }
     },
+    '/ping': {
+      get: {
+        summary: 'Vérifie que le service répond',
+        responses: {
+          200: {
+            description: 'Le service répond pong',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { message: { type: 'string', const: 'pong' } },
+                  required: ['message']
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     '/todos': {
       get: {
         summary: 'Liste les todos',
