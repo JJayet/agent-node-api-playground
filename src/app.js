@@ -24,6 +24,61 @@ async function readJson(request) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
+function decodeQueryComponent(raw) {
+  // Décode strictement : lève une URIError si une séquence %XX n'est pas de l'UTF-8 valide.
+  return raw
+    .replaceAll('+', ' ')
+    .replace(/(?:%[0-9A-Fa-f]{2})+/g, (sequence) => decodeURIComponent(sequence));
+}
+
+function readTextParam(search) {
+  const values = [];
+
+  for (const pair of search.replace(/^\?/, '').split('&')) {
+    if (!pair) {
+      continue;
+    }
+
+    const separator = pair.indexOf('=');
+    const rawKey = separator === -1 ? pair : pair.slice(0, separator);
+    const rawValue = separator === -1 ? '' : pair.slice(separator + 1);
+    let key;
+
+    try {
+      key = decodeQueryComponent(rawKey);
+    } catch {
+      continue;
+    }
+
+    if (key === 'text') {
+      values.push(rawValue);
+    }
+  }
+
+  if (values.length > 1) {
+    return { error: 'text must be provided only once' };
+  }
+
+  if (values.length === 0) {
+    return { error: 'text is required' };
+  }
+
+  let text;
+
+  try {
+    text = decodeQueryComponent(values[0]);
+  } catch {
+    return { error: 'text must be valid UTF-8' };
+  }
+
+  return text === '' ? { error: 'text is required' } : { text };
+}
+
+export function isPalindrome(text) {
+  const chars = Array.from(text);
+  return chars.every((char, index) => char === chars[chars.length - 1 - index]);
+}
+
 export function createApp(store) {
   return createServer(async (request, response) => {
     const url = new URL(request.url, 'http://localhost');
@@ -34,6 +89,16 @@ export function createApp(store) {
 
     if (request.method === 'GET' && url.pathname === '/ping') {
       return sendJson(response, 200, { message: 'pong' });
+    }
+
+    if (request.method === 'GET' && url.pathname === '/palindrome') {
+      const result = readTextParam(url.search);
+
+      if (result.error) {
+        return sendJson(response, 400, { error: result.error });
+      }
+
+      return sendJson(response, 200, { data: { palindrome: isPalindrome(result.text) } });
     }
 
     if (request.method === 'GET' && url.pathname === '/todos') {
