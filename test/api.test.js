@@ -61,6 +61,98 @@ describe('GET /ping', () => {
   });
 });
 
+describe('GET /palindrome', () => {
+  async function get(query) {
+    const response = await fetch(`${baseUrl}/palindrome${query}`);
+    return { status: response.status, text: await response.text() };
+  }
+
+  test('renvoie true pour un palindrome', async () => {
+    const { status, text } = await get('?text=radar');
+
+    assert.equal(status, 200);
+    assert.equal(text, '{"data":{"palindrome":true}}');
+  });
+
+  test('conserve la casse', async () => {
+    const { status, text } = await get('?text=Aa');
+
+    assert.equal(status, 200);
+    assert.equal(text, '{"data":{"palindrome":false}}');
+  });
+
+  test('évalue normalement un texte composé d’espaces', async () => {
+    const { status, text } = await get('?text=%20%20%20');
+
+    assert.equal(status, 200);
+    assert.equal(text, '{"data":{"palindrome":true}}');
+  });
+
+  test('compare un caractère hors BMP comme un seul point de code', async () => {
+    const emoji = encodeURIComponent('😀');
+
+    assert.equal((await get(`?text=${emoji}`)).text, '{"data":{"palindrome":true}}');
+    assert.equal((await get(`?text=a${emoji}a`)).text, '{"data":{"palindrome":true}}');
+    assert.equal((await get(`?text=${emoji}a`)).text, '{"data":{"palindrome":false}}');
+  });
+
+  test('traite + comme un espace et %2B comme un + littéral', async () => {
+    assert.equal((await get('?text=a+b')).text, '{"data":{"palindrome":false}}');
+    assert.equal((await get('?text=a+a')).text, '{"data":{"palindrome":true}}');
+    assert.equal((await get('?text=%2B')).text, '{"data":{"palindrome":true}}');
+    assert.equal((await get('?text=%2Ba')).text, '{"data":{"palindrome":false}}');
+    assert.equal((await get('?text=+a')).text, '{"data":{"palindrome":false}}');
+    assert.equal((await get('?text=%2Ba%2B')).text, '{"data":{"palindrome":true}}');
+  });
+
+  test('rejette un text absent ou vide', async () => {
+    for (const query of ['', '?other=1', '?text=', '?text']) {
+      const { status, text } = await get(query);
+
+      assert.equal(status, 400, query);
+      assert.equal(text, '{"error":"text is required"}', query);
+    }
+  });
+
+  test('rejette un text répété', async () => {
+    const { status, text } = await get('?text=a&text=b');
+
+    assert.equal(status, 400);
+    assert.equal(text, '{"error":"text must be provided only once"}');
+  });
+
+  test('rejette un UTF-8 invalide sans U+FFFD', async () => {
+    const { status, text } = await get('?text=%FF');
+
+    assert.equal(status, 400);
+    assert.equal(text, '{"error":"text must be valid UTF-8"}');
+    assert.equal(text.includes('�'), false);
+  });
+
+  test('renvoie l’erreur de répétition avant l’erreur UTF-8', async () => {
+    const { status, text } = await get('?text=%FF&text=a');
+
+    assert.equal(status, 400);
+    assert.equal(text, '{"error":"text must be provided only once"}');
+  });
+
+  test('renvoie text is required si text est absent même avec un autre paramètre invalide', async () => {
+    const { status, text } = await get('?other=%FF');
+
+    assert.equal(status, 400);
+    assert.equal(text, '{"error":"text is required"}');
+  });
+
+  test('rejette POST et DELETE avec route not found', async () => {
+    for (const method of ['POST', 'DELETE']) {
+      const response = await fetch(`${baseUrl}/palindrome?text=radar`, { method });
+
+      assert.equal(response.status, 404, method);
+      assert.deepEqual(await response.json(), { error: 'route not found' });
+    }
+  });
+});
+
 describe('GET /openapi.json', () => {
   test('expose la spécification OpenAPI 3.1', async () => {
     const response = await fetch(`${baseUrl}/openapi.json`);

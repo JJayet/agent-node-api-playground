@@ -30,6 +30,7 @@ L'API écoute par défaut sur `http://localhost:3000`. La variable d'environneme
 | --- | --- | --- |
 | `GET` | `/health` | Vérifie que le service répond |
 | `GET` | `/ping` | Répond `{"message":"pong"}` |
+| `GET` | `/palindrome?text=...` | Indique si `text` est un palindrome |
 | `GET` | `/todos` | Liste les tâches |
 | `GET` | `/todos?completed=true` | Filtre les tâches par statut |
 | `POST` | `/todos` | Crée une tâche avec `{ "title": "..." }` |
@@ -44,6 +45,23 @@ curl -X POST http://localhost:3000/todos \
   -H 'content-type: application/json' \
   -d '{"title":"Tester un agent"}'
 ```
+
+### `GET /palindrome`
+
+Le paramètre `text` est obligatoire et ne doit apparaître qu'une fois. La comparaison se fait par points de code, en conservant la casse et les espaces (`Aa` n'est pas un palindrome). Le `+` est décodé en espace, `%2B` donne un `+` littéral.
+
+```bash
+curl 'http://localhost:3000/palindrome?text=radar'
+# {"data":{"palindrome":true}}
+```
+
+Erreurs `400` (au format `{"error":"..."}`), par ordre de priorité :
+
+- `text must be provided only once` : `text` est répété ;
+- `text must be valid UTF-8` : `text` contient une séquence `%XX` qui n'est pas de l'UTF-8 valide ;
+- `text is required` : `text` est absent ou vide.
+
+Les autres méthodes HTTP reçoivent le `404` habituel `route not found`.
 
 ## Vérifications
 
